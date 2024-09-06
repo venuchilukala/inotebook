@@ -6,6 +6,9 @@ connectToMongo();
 const app = express();
 const port = 3000;
 
+//without this we get output as undefined 
+app.use(express.json())
+
 //Available routes
 // ****use app.use instead of app.get****
 

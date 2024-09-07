@@ -48,9 +48,50 @@ async (req, res)=>{
 
     }catch(error){
         console.error(error.message);
-        res.status(500).send('some error occured');
+        res.status(500).send('Internal Server Error');
     }
 })
 
-
+//Authenticating a user using POST and no login is required
+router.post('/login',[
+    body('email','Enter valid Email').isEmail(),
+    body('password','Password cannot be blank').exists(),
+],
+async (req, res) =>{
+    //If there are errors return bad request and errors
+    const error = validationResult(req);
+    if(!error.isEmpty()){
+        return res.status(400).json({error : error.array()})
+    }
+    const {email, password} = req.body;
+    
+    try{
+        let user = await User.findOne({email});
+        
+        if(!user){
+            return res.status(400).json({error : "Please try to login with correct credentials"});
+        }
+        
+        const passwordCompare = await bcrypt.compare(password, user.password);
+        
+        if(!passwordCompare){
+            return res.status(400).json({error : "Please try to login with correct credentials"});
+        }
+        
+        const data = {
+            user : {
+                id : user.id
+            }
+        }
+        
+        const authtoken = jwt.sign(data, JWT_SECRET)
+        // console.log(jwtData)
+        
+        res.json({authtoken})
+        
+    }catch(error){
+        console.error(error.message);
+        res.status(500).send('Internal Server Error');
+    }   
+})
 module.exports = router;

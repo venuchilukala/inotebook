@@ -1,9 +1,12 @@
 const express = require('express');
 const { default: mongoose } = require('mongoose');
-const User = require('../models/User')
+const User = require('../models/User');
 const router = express.Router();
-const {body, validationResult} = require('express-validator')
+const bcrypt = require('bcryptjs');
+const {body, validationResult} = require('express-validator');
+var jwt = require('jsonwebtoken');
 
+const JWT_SECRET = 'iamagood$boy'
 //creating user using POST and no login is required
 router.post('/createUser',[
     body('name','Enter Valid Name').isLength({min : 3}),
@@ -22,16 +25,27 @@ async (req, res)=>{
     if(user){
         return res.status(400).json({error : 'Sorry user with this email already exists'});
     }
+    const salt = await bcrypt.genSalt(10);
+
+    const secPass = await bcrypt.hash(req.body.password,salt);
     //create a user
     user = await User.create({
         name : req.body.name,
         email : req.body.email,
-        password : req.body.password,
+        password : secPass,
     })
-    // .then(user => res.json(user))
-    // .catch(err => {console.log(err) 
-    // res.json({error : 'Please enter a unique value for email', message : err.message})});
-    res.json({user})
+
+    const data = {
+        user : {
+            id : user.id
+        }
+    }
+
+    const authtoken = jwt.sign(data, JWT_SECRET)
+    // console.log(jwtData)
+  
+    res.json({authtoken})
+
     }catch(error){
         console.error(error.message);
         res.status(500).send('some error occured');

@@ -20,6 +20,7 @@ const UserSchema = new Schema({
     },
 });
 
+//here user will be viewed in mongodb
 const User = mongoose.model('user', UserSchema);
 // User.createIndexes();
 module.exports = User;
